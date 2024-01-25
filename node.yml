@@ -119,7 +119,7 @@ groups:
     annotations:
       description: "instance: {{ $labels.instance }}"
       value: "{{ $value }}"
-      summary: "Node is shutdown"
+      summary: "Node was shutdown"
 
   - alert: Too_many_filefd_allocated
     expr: node_filefd_allocated /node_filefd_maximum > 0.8
