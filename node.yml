@@ -18,7 +18,7 @@ groups:
       level: P0
       expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 90
     annotations:
-      description: '磁盘使用空间大于90%, 主机名: {{ $labels.host }}, value:{{ $value }}'
+      description: '磁盘使用空间大于{{ $value }}%, 主机名: {{ $labels.host }}'
       summary: '磁盘使用空间大于90%'
 
 
