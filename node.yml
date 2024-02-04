@@ -11,12 +11,12 @@ groups:
       description: '磁盘使用空间大于80%, 主机名: {{ $labels.host }}, value:{{ $value }}'
       summary: '磁盘空间不足'
 
-  - alert: NODE_disk_used_more_than_60%
-    expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 60
+  - alert: NODE_disk_used_more_than_90%
+    expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 90
     for: 1m
     labels:
       level: P0
-      expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 60
+      expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 90
     annotations:
       description: '磁盘使用空间大于{{ $value }}%, 主机名: {{ $labels.host }}'
       summary: '磁盘空间不足'
