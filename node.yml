@@ -2,22 +2,22 @@ groups:
 - name: alert.rules
   rules:
   - alert: NODE_disk_used_more_than_80%
-    expr: 100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100 > 80
+    expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 80
     for: 3m
     labels:
       level: P2
-      expr: 100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100 > 80
+      expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 80
     annotations:
       description: 'instance: {{ $labels.instance }}, values: {{ $value }}'
       value: '{{ $value }}'
       summary: disk used more than 80%
 
   - alert: NODE_disk_used_more_than_90%
-    expr: 100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100 > 90
+    expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 90
     for: 3m
     labels:
       level: P0
-      expr: 100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100 > 90
+      expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 90
     annotations:
       description: '磁盘剩余空间不足10% 主机名: {{ $labels.host }}'
 
