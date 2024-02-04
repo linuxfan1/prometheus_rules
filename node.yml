@@ -16,12 +16,12 @@ groups:
     expr: 100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100 > 90
     for: 3m
     labels:
-      level: P1
+      level: P0
       expr: 100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100 > 90
     annotations:
-      description: 'instance: {{ $labels.instance }}, values: {{ $value }}'
-      value: '{{ $value }}'
-      summary: disk used more than 90%
+      description: '磁盘剩余空间不足10% 主机名: {{ $labels.host }}'
+
+
 
   - alert: NODE_disk_inode_more_than_80%
     expr: 100 - node_filesystem_files_free{fstype=~"(ext.|xfs)"} / node_filesystem_files{fstype=~"(ext.|xfs)"}  * 100 > 80
