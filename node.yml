@@ -13,7 +13,7 @@ groups:
 
   - alert: NODE_disk_used_more_than_60%
     expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 60
-    for: 3m
+    for: 1m
     labels:
       level: P0
       expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 60
