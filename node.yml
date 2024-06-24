@@ -9,9 +9,18 @@ groups:
       expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 80
     annotations:
       description: '磁盘使用空间大于{{ $value }}%, 主机名: {{ $labels.host }}, 挂载点: {{$labels.mountpoint}}'
-      summary: '磁盘空间不足'
+      summary: '磁盘空间剩余不足'
 
-
+  - alert: NODE_disk_inode_more_than_80%
+    expr: 100 - node_filesystem_files_free{fstype=~"(ext.|xfs)"} / node_filesystem_files{fstype=~"(ext.|xfs)"}  * 100 > 80
+    for: 3m
+    labels:
+      level: P2
+      expr: 100 - node_filesystem_files_free{fstype=~"(ext.|xfs)"} / node_filesystem_files{fstype=~"(ext.|xfs)"}  * 100 > 80
+    annotations:
+      description: '磁盘inode使用数量大于{{ $value }}, instance: {{ $labels.host }}, 挂载点: {{$labels.mountpoint}}'
+      summary: '磁盘Inode剩余不足'
+      
   - alert: NODE_disk_used_more_than_90%
     expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 90
     for: 3m
@@ -20,7 +29,7 @@ groups:
       expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 90
     annotations:
       description: '磁盘使用空间大于{{ $value }}%, 主机名: {{ $labels.host }}, 挂载点: {{$labels.mountpoint}}'
-      summary: '磁盘空间不足'
+      summary: '磁盘空间剩余不足'
 
 
   - alert: NODE_disk_readonly
