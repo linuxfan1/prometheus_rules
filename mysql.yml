@@ -1,68 +1,68 @@
 groups:
 - name: MySQL
   rules:
-  - alert: mysql_server_stop
+  - alert: mysql_server_has_been_stopped
     expr: mysql_up == 0
     for: 10s
     labels:
       level: P0
     annotations:
-      description: "mysql server instance: {{ $labels.instance }}"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}"
       summary: "mysql server has been stopped"
 
-  - alert: mysql_server_restart
-    expr: changes(process_start_time_seconds{job="mysql"}[5m]) > 0
+  - alert: mysql_server_has_been_restarted
+    expr: mysql_global_status_uptime < 300
     for: 1m
     labels:
       level: P0
     annotations:
-      description: "mysql server instance: {{ $labels.instance }}, values:{{ $value }}"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}"
       summary: "mysql server has been restarted"
 
-  - alert: mysql slave_io_thread or slave_sql_thread has been stopped
+  - alert: mysql_slave_io_thread_or_slave_sql_thread_has_been_stopped
     expr: mysql_slave_status_slave_sql_running == 0 or mysql_slave_status_slave_io_running == 0
     for: 10s
     labels:
       level: P0
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}"
       summary: "mysql slave_io_thread or slave_sql_thread has been stopped"
 
-  - alert: mysql slave is not read only
+  - alert: mysql_slave_is_not_readonly
     expr: ((mysql_slave_status_slave_io_running == 1 and mysql_slave_status_slave_sql_running == 1) + on (instance) mysql_global_variables_read_only)  == 1
     for: 10s
     labels:
       level: P2
     annotations:
-      description: "mysql instance: {{ $labels.instance }}"
-      summary: "mysql slave is not read only"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}"
+      summary: "mysql slave is not readonly"
       
-  - alert: mysql master is read only
+  - alert: mysql_master_is_readonly
     expr: (mysql_global_variables_read_only unless on (host) mysql_slave_status_slave_sql_running) and mysql_global_variables_read_only == 1
     for: 10s
     labels:
       level: P0
     annotations:
-      description: "mysql instance: {{ $labels.instance }}"
-      summary: "mysql master is read only"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}"
+      summary: "mysql master is readonly"
 
-  - alert: mysql_threads_running_more_than_50
+  - alert: mysql_too_many_threads_running
     expr: mysql_global_status_threads_running > 50
     for: 10s
     labels:
       level: P1
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql threads_running more than 50"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}, value: {{ $value }}"
+      summary: "mysql too many threads running"
       
   - alert: mysql_auto_increment_too_high
-    expr: floor(mysql_info_schema_auto_increment_column/mysql_info_schema_auto_increment_column_max*100) > 80
+    expr: floor(mysql_info_schema_auto_increment_column/mysql_info_schema_auto_increment_column_max * 100) > 80
     for: 10s
     labels:
       level: P2
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql auto increment is too high"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}, schema: {{ $labels.schema }}, table: {{ $labels.table }}, value: {{ $value }}%"
+      summary: "mysql auto increment too high"
 
   - alert: "mysql_master_sync_binlog_and_innodb_flush_trx_commit_is_not_eq_1"
     expr: (mysql_global_variables_sync_binlog unless on (host) mysql_slave_status_slave_sql_running) and (mysql_global_variables_sync_binlog != 1 or mysql_global_variables_innodb_flush_log_at_trx_commit !=1)
@@ -70,71 +70,44 @@ groups:
     labels:
       level: P2
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}"
       summary: "sync_binlog and innodb_flush_at_trx_commit is not equal 1"
 
-  - alert: mysql_slave_delay_more_than_10s
-    expr: (mysql_heartbeat_now_timestamp_seconds - mysql_heartbeat_stored_timestamp_seconds) > 10
+  - alert: mysql_slave_delay
+    expr: (mysql_heartbeat_now_timestamp_seconds - mysql_heartbeat_stored_timestamp_seconds) > 60
     for: 10s
     labels:
       level: P1
     annotations:
-      description: "mySQL instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql slave delay more than 10s"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}, value: {{ $value }}"
+      summary: "mysql slave delay"
 
   - alert: mysql_waiting_for_global_read_lock
-    expr: mysql_info_schema_processlist_seconds{state="waiting_for_global_read_lock"} > 10
+    expr: mysql_info_schema_processlist_seconds{state="waiting_for_global_read_lock"} > 5
     for: 10s
     labels:
       level: P0
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}, value: {{ $value }}"
       summary: "mysql waitting for global read lock"
 
   - alert: mysql_waiting_for_table_metadata_lock
-    expr: mysql_info_schema_processlist_seconds{state="waiting_for_table_metadata_lock"} > 10
+    expr: mysql_info_schema_processlist_seconds{state="waiting_for_table_metadata_lock"} > 5
     for: 10s
     labels:
-      level: "P1"
+      level: P1
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}, value: {{ $value }}"
       summary: "mysql waitting for table metadata lock"
 
-  - alert: mysql_open_files_too_many
-    expr: mysql_global_status_innodb_num_open_files/mysql_global_variables_open_files_limit > 0.75
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql open files too many"
-
-  - alert: mysql_max_connections_more_than_80%
+  - alert: mysql_max_connections_too_high
     expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections * 100 > 80
     for: 60s
     labels:
       level: P2
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql max connections more than 80%"
-
-  - alert: mysql_table_definition_cache_too_small
-    expr: mysql_global_status_open_table_definitions > mysql_global_variables_table_definition_cache
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql table definition cache too small"
-
-  - alert: mysql_open_table_cache_too_small
-    expr: mysql_global_status_open_tables/mysql_global_variables_table_open_cache > 0.8
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql open table cache too small"
+      description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}, value: {{ $value }}"
+      summary: "mysql max connections too high"
 
   - alert: mysql_log_bin_is_disabled
     expr: mysql_global_variables_log_bin == 0
@@ -142,7 +115,7 @@ groups:
     labels:
       level: P0
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql log_bin is disabled"
 
   - alert: mysql_log_slave_updates_is_disabled
@@ -151,7 +124,7 @@ groups:
     labels:
       level: P0
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql log_slave_updates is disabled"
 
   - alert: mysql_slow_queries_too_many
@@ -160,53 +133,17 @@ groups:
     labels:
       level: P1
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql slow queries too many"
 
-  - alert: mysql_threads_connected_too_many
+  - alert: mysql_too_many_threads_connected
     expr: rate(mysql_global_status_threads_connected[1m]) > 50
     for: 60s
     labels:
       level: P1
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql threads_connected more than 50"
-
-  - alert: mysql_open_files_high
-    expr: mysql_global_status_innodb_num_open_files > (mysql_global_variables_open_files_limit) * 0.75
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql open files high"
-
-  - alert: mysql_read_buffer_size_bigger_than_max_allowed_packet
-    expr: mysql_global_variables_read_buffer_size > mysql_global_variables_slave_max_allowed_packet
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "read_buffer_size is bigger than max_allowed_packet size"
-
-  - alert: "mysql_sort_buffer_size_is_small"
-    expr: rate(mysql_global_status_sort_merge_passes[1m]) > 10
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "sort_buffer_size is small"
-
-  - alert: mysql_thread_stack_size_is_too_small
-    expr: mysql_global_variables_thread_stack < 196608
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql thread stack size is too small"
+      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
+      summary: "mysql too many threads_connected"
 
   - alert: mysql_innodb_force_recovery_is_enabled
     expr: mysql_global_variables_innodb_force_recovery != 0
@@ -214,43 +151,16 @@ groups:
     labels:
       level: P2
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "Innodb Force Recovery is enabled"
 
-  - alert: mysql_innodb_log_file_size_is_small
-    expr: mysql_global_variables_innodb_log_file_size < 16777216
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "InnoDB Log File size is too small"
-
-  - alert: mysql_binlog_cache_size_is_small
-    expr: rate(mysql_global_status_binlog_cache_disk_use[1m]) > 10
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql binlog_cache_size is small"
-
-  - alert: mysql_binlog_stmt_cache_size_is_small
-    expr: rate(mysql_global_status_binlog_stmt_cache_disk_use[1m]) > 10
-    for: 60s
-    labels:
-      level: P2
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
-      summary: "mysql binlog_stmt_cache_size is small"
-
   - alert: mysql_binlog_size_bytes_too_large
-    expr: mysql_binlog_size_bytes > 1024*1024*1024*100
+    expr: mysql_binlog_size_bytes > 1024 * 1024 * 1024 * 200
     for: 60s
     labels:
       level: P2
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql total binlog size is too large"
 
   - alert: mysql_binlog_file_too_many
@@ -259,7 +169,7 @@ groups:
     labels:
       level: P2
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql binlog files is too many"
 
   - alert: mysql_slave_skip_errors
@@ -268,5 +178,5 @@ groups:
     labels:
       level: P2
     annotations:
-      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql global variables slave skip errors(eg.1032,1062)"
