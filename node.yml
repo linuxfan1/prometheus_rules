@@ -1,6 +1,15 @@
 groups:
-- name: os
+- name: NODE
   rules:
+  - alert: NODE_shutdown
+    expr: up{app="NODE"} == 0
+    for: 1m
+    labels:
+      level: P0
+    annotations:
+      description: "主机宕机, 主机名: {{ $labels.host }}"
+      summary: "主机宕机"
+
   - alert: NODE_disk_used_more_than_80%
     expr: ceil(100 - node_filesystem_avail_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} / node_filesystem_size_bytes{fstype=~"(ext.|xfs)", mountpoint!~"/boot"} * 100) > 80
     for: 3m
@@ -31,7 +40,6 @@ groups:
       description: '磁盘使用空间大于{{ $value }}%, 主机名: {{ $labels.host }}, 挂载点: {{$labels.mountpoint}}'
       summary: '磁盘空间剩余不足'
 
-
   - alert: NODE_disk_readonly
     expr: node_filesystem_readonly{fstype=~"(ext.|xfs)"} == 1
     for: 1m
@@ -41,7 +49,6 @@ groups:
     annotations:
       description: '磁盘不可写, 主机: {{ $labels.instance }}, 磁盘: {{ $labels.device }}, 挂载点: {{ $labels.mountpoint }}'
       summary: '磁盘不可写'
-
 
   - alert: NODE_memory_used_more_than_80%
     expr: ceil(100-node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100) >= 80
@@ -53,7 +60,6 @@ groups:
       description: '内存使用率大于{{ $value }}, 主机名: {{ $labels.host }}'
       summary: '内存使用率过高'
 
-
   - alert: NODE_node_overload
     expr: (node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode="system"}))  > 1
     for: 3m
@@ -63,7 +69,6 @@ groups:
     annotations:
       description: 'CPU负载大于 {{ $value }}, 主机名: {{ $labels.instance }}'
       summary: 'CPU负载过高'
-
 
   - alert: NODE_cpu_used_more_than_90%
     expr: ceil(100 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) by(instance) * 100) > 90
@@ -75,7 +80,6 @@ groups:
       description: 'CPU使用率大于{{ $value }}, 主机名: {{ $labels.instance }}'
       summary: 'CPU使用率过高'
 
-
   - alert: NODE_cpu_used_more_than_95%
     expr: ceil(100 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) by(instance) * 100) > 95
     for: 3m
@@ -85,7 +89,6 @@ groups:
     annotations:
       description: 'CPU使用率大于{{ $value }}, 主机名: {{ $labels.instance }}'
       summary: 'CPU使用率过高'
-
 
   - alert: NODE_tcp_estab_num_more_than_10000
     expr: node_netstat_Tcp_CurrEstab > 10000
@@ -97,18 +100,7 @@ groups:
       description: '打开网络连接数大于{{ $value }}, 主机名: {{ $labels.instance }}'
       summary: '网络连接数过高'
 
-
-  - alert: NODE_shutdown
-    expr: up == 0
-    for: 1m
-    labels:
-      level: P0
-    annotations:
-      description: "主机宕机, 主机名: {{ $labels.host }}'"
-      summary: "主机不可达"
-
-
-  - alert: Too_many_filefd_allocated
+  - alert: NODE_too_many_filefd_allocated
     expr: ceil(node_filefd_allocated / node_filefd_maximum *100) > 90
     for: 1m
     labels:
