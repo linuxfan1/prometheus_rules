@@ -46,14 +46,14 @@ groups:
       description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}"
       summary: "mysql master is readonly"
 
-  - alert: mysql_too_many_threads_running
+  - alert: mysql_threads_running_too_many
     expr: mysql_global_status_threads_running > 50
     for: 10s
     labels:
       level: P1
     annotations:
       description: "cluster: {{ $labels.cluster }}, instance: {{ $labels.instance }}, value: {{ $value }}"
-      summary: "mysql too many threads running"
+      summary: "mysql threads running is too many"
       
   - alert: mysql_auto_increment_too_high
     expr: floor(mysql_info_schema_auto_increment_column/mysql_info_schema_auto_increment_column_max * 100) > 80
@@ -134,16 +134,16 @@ groups:
       level: P1
     annotations:
       description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
-      summary: "mysql slow queries too many"
+      summary: "mysql slow queries is too many"
 
-  - alert: mysql_too_many_threads_connected
+  - alert: mysql_threads_connected_too_many
     expr: rate(mysql_global_status_threads_connected[1m]) > 50
     for: 60s
     labels:
       level: P1
     annotations:
       description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
-      summary: "mysql too many threads_connected"
+      summary: "mysql threads_connected is too many"
 
   - alert: mysql_innodb_force_recovery_is_enabled
     expr: mysql_global_variables_innodb_force_recovery != 0
@@ -180,3 +180,12 @@ groups:
     annotations:
       description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql global variables slave skip errors(eg.1032,1062)"
+
+  - alert: mysql_open_table_cache_too_small
+    expr: mysql_global_status_open_tables/mysql_global_variables_table_open_cache > 0.8
+    for: 60s
+    labels:
+      level: P2
+    annotations:
+      description: "mysql instance: {{ $labels.instance }}, values: {{ $value }}"
+      summary: "mysql open table cache is too small"
