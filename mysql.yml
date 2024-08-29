@@ -113,7 +113,7 @@ groups:
     expr: mysql_global_variables_log_bin == 0
     for: 60s
     labels:
-      level: P0
+      level: P1
     annotations:
       description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql log_bin is disabled"
@@ -122,7 +122,7 @@ groups:
     expr: mysql_global_variables_log_slave_updates == 0
     for: 60s
     labels:
-      level: P0
+      level: P1
     annotations:
       description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql log_slave_updates is disabled"
@@ -135,15 +135,6 @@ groups:
     annotations:
       description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
       summary: "mysql slow queries is too many"
-
-  - alert: mysql_threads_connected_too_many
-    expr: rate(mysql_global_status_threads_connected[1m]) > 50
-    for: 60s
-    labels:
-      level: P1
-    annotations:
-      description: "mysql instance: {{ $labels.instance }}, value:{{ $value }}"
-      summary: "mysql threads_connected is too many"
 
   - alert: mysql_innodb_force_recovery_is_enabled
     expr: mysql_global_variables_innodb_force_recovery != 0
